@@ -1,0 +1,7 @@
+fastapi
+uvicorn
+PyPDF2
+requests
+python-multipart
+nltk
+sentence-transformers
