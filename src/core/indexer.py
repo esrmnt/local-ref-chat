@@ -1,11 +1,13 @@
 import numpy as np
+from src.config import EMBEDDING_MODEL_NAME, DEFAULT_TOP_K
 from sentence_transformers import SentenceTransformer
 
 class Indexer:
-    def __init__(self, embedding_model_name="all-MiniLM-L6-v2"):
+    def __init__(self, embedding_model_name=EMBEDDING_MODEL_NAME):
+        self.index = {}        
+        self.documents = {}
+        self.preview_text_length = 250
         self.embedding_model = SentenceTransformer(embedding_model_name)
-        self.documents = {}  # doc_id: full_text
-        self.index = {}      # chunk_id: {"text", "doc_id", "filename", "chunk_index", "embedding"}
 
     def rebuild(self, doc_manager):
         doc_id = 0
@@ -57,11 +59,11 @@ class Indexer:
                 results.append({
                     "filename": chunk["filename"],
                     "chunk_index": chunk["chunk_index"],
-                    "text_snippet": chunk["text"][:250] + ("..." if len(chunk["text"]) > 250 else "")
+                    "text_snippet": chunk["text"][:self.preview_text_length] + ("..." if len(chunk["text"]) > self.preview_text_length else "")
                 })
         return results
 
-    def semantic_search(self, query, top_k=5):
+    def semantic_search(self, query, top_k=DEFAULT_TOP_K):
         query_emb = self.embedding_model.encode(query)
         rank = []
         for chunk in self.index.values():
@@ -74,7 +76,7 @@ class Indexer:
                 "filename": chunk["filename"],
                 "chunk_index": chunk["chunk_index"],
                 "similarity": float(score),
-                "text_snippet": chunk["text"][:250] + ("..." if len(chunk["text"]) > 250 else "")
+                "text_snippet": chunk["text"][:self.preview_text_length] + ("..." if len(chunk["text"]) > self.preview_text_length else "")
             }
             for score, chunk in rank[:top_k]
         ]

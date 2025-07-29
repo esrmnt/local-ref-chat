@@ -1,11 +1,12 @@
-from fastapi import APIRouter, Query
-from src.core.state import indexer 
 import requests
+from src.core.state import indexer 
+from fastapi import APIRouter, Query
+from src.config import OLLAMA_API_URL, OLLAMA_MODEL
 
 router = APIRouter()
 
-OLLAMA_URL = "http://localhost:11434/api/generate"  # adjust if needed
-OLLAMA_MODEL = "llama3"  # or "mistral"; change per your install
+OLLAMA_URL = OLLAMA_API_URL 
+OLLAMA_MODEL = OLLAMA_MODEL 
 
 @router.get("/ask")
 def ask(question: str = Query(..., description='Your natural language question'), top_k: int = 5):
