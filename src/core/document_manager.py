@@ -1,8 +1,8 @@
-from pathlib import Path
 import shutil
-from fastapi import UploadFile, HTTPException
-from nltk.tokenize import sent_tokenize
+from pathlib import Path
 from PyPDF2 import PdfReader
+from nltk.tokenize import sent_tokenize
+from fastapi import UploadFile, HTTPException
 
 class DocumentManager:
     def __init__(self, docs_folder="docs"):

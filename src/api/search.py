@@ -1,9 +1,7 @@
 from fastapi import APIRouter, Query
 from src.core.state import indexer
 
-
 router = APIRouter()
-
 
 @router.get("/search")
 def search_docs(q: str = Query(..., description="Search keyword")):

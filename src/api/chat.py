@@ -1,7 +1,5 @@
-# src/api/chat.py
-
 from fastapi import APIRouter, Query
-from src.core.state import indexer  # shared instance!
+from src.core.state import indexer 
 import requests
 
 router = APIRouter()

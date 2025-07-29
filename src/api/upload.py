@@ -1,12 +1,8 @@
+from src.core.state import doc_manager, indexer
 from fastapi import APIRouter, File, UploadFile, HTTPException
 from fastapi.responses import HTMLResponse, JSONResponse
-from src.core.state import doc_manager, indexer
-
 
 router = APIRouter()
-
-# doc_manager = DocumentManager()
-# indexer = Indexer()
 
 @router.get("/upload", response_class=HTMLResponse)
 def upload_form():

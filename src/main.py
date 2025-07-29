@@ -1,10 +1,8 @@
+import nltk
 import threading
 from fastapi import FastAPI
 from src.api import upload, search, chat  # import api routers
 from src.core.state import doc_manager, indexer
-
-
-import nltk
 
 nltk.download("punkt")
 nltk.download("punkt_tab")

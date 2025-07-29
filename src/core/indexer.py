@@ -1,5 +1,5 @@
-from sentence_transformers import SentenceTransformer
 import numpy as np
+from sentence_transformers import SentenceTransformer
 
 class Indexer:
     def __init__(self, embedding_model_name="all-MiniLM-L6-v2"):
