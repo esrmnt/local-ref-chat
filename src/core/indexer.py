@@ -1,6 +1,7 @@
 import numpy as np
-from src.config import EMBEDDING_MODEL_NAME, DEFAULT_TOP_K
 from sentence_transformers import SentenceTransformer
+from src.config import EMBEDDING_MODEL_NAME, DEFAULT_TOP_K
+from src.core.utils import clean_text, format_snippet, render_citation
 
 class Indexer:
     def __init__(self, embedding_model_name=EMBEDDING_MODEL_NAME):
@@ -35,6 +36,7 @@ class Indexer:
             else:
                 continue
 
+            text = clean_text(text)
             self.documents[doc_id] = text
 
             chunks = doc_manager.split_text_into_chunks(text)
@@ -59,11 +61,13 @@ class Indexer:
                 results.append({
                     "filename": chunk["filename"],
                     "chunk_index": chunk["chunk_index"],
-                    "text_snippet": chunk["text"][:self.preview_text_length] + ("..." if len(chunk["text"]) > self.preview_text_length else "")
+                    "text_snippet": format_snippet(chunk["text"], self.preview_text_length),
+                    "citation": render_citation(chunk["filename"], chunk["chunk_index"])
                 })
         return results
 
     def semantic_search(self, query, top_k=DEFAULT_TOP_K):
+        print(f"Performing semantic search for query: {query}")
         query_emb = self.embedding_model.encode(query)
         rank = []
         for chunk in self.index.values():
@@ -76,7 +80,8 @@ class Indexer:
                 "filename": chunk["filename"],
                 "chunk_index": chunk["chunk_index"],
                 "similarity": float(score),
-                "text_snippet": chunk["text"][:self.preview_text_length] + ("..." if len(chunk["text"]) > self.preview_text_length else "")
+                "text_snippet": format_snippet(chunk["text"], self.preview_text_length),
+                "citation": render_citation(chunk["filename"], chunk["chunk_index"])
             }
             for score, chunk in rank[:top_k]
         ]

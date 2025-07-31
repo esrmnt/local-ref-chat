@@ -419,3 +419,4 @@ FodyWeavers.xsd
 
 venv/
 docs/
+.vscode/settings.json
