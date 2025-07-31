@@ -1,5 +1,5 @@
 import requests
-from src.config import OLLAMA_API_URL, OLLAMA_MODEL
+from backend.config import OLLAMA_API_URL, OLLAMA_MODEL
 
 def get_ollama_answer(prompt: str, stream: bool = False):
     """

@@ -1,8 +1,8 @@
 import requests
-from src.core.state import indexer
+from backend.core.state import indexer
 from fastapi import APIRouter, Query
-from src.core import get_ollama_answer
-from src.config import OLLAMA_API_URL, OLLAMA_MODEL
+from backend.core import get_ollama_answer
+from backend.config import OLLAMA_API_URL, OLLAMA_MODEL
 
 router = APIRouter()
 

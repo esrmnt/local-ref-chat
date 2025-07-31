@@ -1,7 +1,7 @@
 import numpy as np
 from sentence_transformers import SentenceTransformer
-from src.config import EMBEDDING_MODEL_NAME, DEFAULT_TOP_K
-from src.core.utils import clean_text, format_snippet, render_citation
+from backend.config import EMBEDDING_MODEL_NAME, DEFAULT_TOP_K
+from backend.core.utils import clean_text, format_snippet, render_citation
 
 class Indexer:
     def __init__(self, embedding_model_name=EMBEDDING_MODEL_NAME):

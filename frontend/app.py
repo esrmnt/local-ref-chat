@@ -29,7 +29,7 @@ with st.sidebar:
 
     # Optional: call backend to list docs if you have an endpoint
     try:
-        res_docs = requests.get(f"{API_URL}/list_docs")
+        res_docs = requests.get(f"{API_URL}/list")
         if res_docs.ok:
             docs = res_docs.json().get("documents", [])
             if docs:

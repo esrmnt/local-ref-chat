@@ -3,7 +3,7 @@ from pathlib import Path
 from PyPDF2 import PdfReader
 from nltk.tokenize import sent_tokenize
 from fastapi import UploadFile, HTTPException
-from src.config import ALLOWED_FILE_EXTENSIONS, DOCS_FOLDER, CHUNK_SIZE_WORDS
+from backend.config import ALLOWED_FILE_EXTENSIONS, DOCS_FOLDER, CHUNK_SIZE_WORDS
 
 class DocumentManager:
     def __init__(self, docs_folder=DOCS_FOLDER):
@@ -46,3 +46,6 @@ class DocumentManager:
         with open(save_path, "wb") as buffer:
             shutil.copyfileobj(file.file, buffer)
         return save_path
+
+    def list_documents(self):
+        return [f.name for f in self.docs_folder.iterdir() if f.is_file()]
