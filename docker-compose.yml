@@ -1,0 +1,51 @@
+version: '3.8'
+
+services:
+  # Backend API service
+  backend:
+    build: .
+    container_name: local-ref-chat-backend
+    ports:
+      - "8000:8000"
+    environment:
+      - API_HOST=0.0.0.0
+      - API_PORT=8000
+      - DOCS_FOLDER=/app/docs
+      - LOG_LEVEL=INFO
+      - OLLAMA_API_URL=http://host.docker.internal:11434/api/generate
+    volumes:
+      - ./docs:/app/docs
+      - ./logs:/app/logs
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    restart: unless-stopped
+    networks:
+      - local-ref-chat
+
+  # Frontend Streamlit service
+  frontend:
+    build: .
+    container_name: local-ref-chat-frontend
+    command: streamlit run frontend/app.py --server.address 0.0.0.0 --server.port 8501
+    ports:
+      - "8501:8501"
+    environment:
+      - API_URL=http://backend:8000
+    depends_on:
+      backend:
+        condition: service_healthy
+    restart: unless-stopped
+    networks:
+      - local-ref-chat
+
+volumes:
+  docs_data:
+  logs_data:
+
+networks:
+  local-ref-chat:
+    driver: bridge

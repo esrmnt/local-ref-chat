@@ -5,9 +5,3 @@ indexer = Indexer()
 doc_manager = DocumentManager()
 
 
-from backend.core import DocumentManager, Indexer
-
-indexer = Indexer()
-doc_manager = DocumentManager()
-
-
