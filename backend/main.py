@@ -77,7 +77,7 @@ async def startup_index_async():
 # Create FastAPI app with lifespan
 app = FastAPI(
     title="Reference Chat API",
-    description="A local search and RAG chat assistant for your documents",
+    description="API for local search and RAG chat assistant for your documents",
     version="1.0.0",
     lifespan=lifespan
 )
@@ -85,7 +85,8 @@ app = FastAPI(
 # Add CORS middleware
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # Configure this for production
+    # CORS is added, but is highly permissive. Can be added with specific details for usages in production.
+    allow_origins=["*"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],

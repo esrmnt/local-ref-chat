@@ -197,6 +197,7 @@ with st.sidebar:
     st.subheader("📚 Your Documents")
     
     docs_result = get_documents()
+    st.write(f"**Total: {docs_result.get('total_count', len(documents))} documents**")
     if docs_result["success"]:
         docs_data = docs_result["data"]
         documents = docs_data.get("documents", [])
