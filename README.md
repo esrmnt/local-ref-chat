@@ -85,7 +85,7 @@ streamlit run frontend/app.py
 2. Answers are generated using a local language model and reference your documents.
 3. Adjust the number of context chunks used for answers in the sidebar.
 
-### ✨ Example
+### Example
 
 **Upload:**  
 Choose a PDF/TXT, click Upload.
@@ -138,7 +138,7 @@ frontend/
 └── pages/               # Multi-page app structure (future)
 ```
 
-## 🚦 API Endpoints
+## API Endpoints
 
 ### Knowledge Management
 - `POST /api/v1/upload` - Upload document
@@ -167,7 +167,7 @@ frontend/
 
 More information on each endpoint is available in the API documentation at [API Reference Document](API_REFERENCE_DOCUMENT.md).
 
-## 🐛 Troubleshooting
+## Troubleshooting
 
 ### Common Issues
 
@@ -191,7 +191,7 @@ More information on each endpoint is available in the API documentation at [API 
 - Check if questions match document content
 - Try different phrasings or keywords
 
-## 🛠️ Next Steps
+## Next Steps
 
 - Add clean UI for search and chat (currently basic).
 - Add support for more file types (DOCX, Markdown).
@@ -199,7 +199,7 @@ More information on each endpoint is available in the API documentation at [API 
 - Enhance chat memory for multi-turn dialog.
 - Collect feedback with citations, provide an export or summary feature.
 
-## 🤝 Credits
+## Credits
 
 - [FastAPI](https://fastapi.tiangolo.com/) for the API.
 - [SentenceTransformers](https://www.sbert.net/) for semantic embeddings.
@@ -208,6 +208,6 @@ More information on each endpoint is available in the API documentation at [API 
 - NLTK for sentence segmentation.
 - PyPDF2 for robust PDF extraction.
 
-## 📝 License
+## License
 
 MIT License. See [LICENSE](LICENSE) for details.
