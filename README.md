@@ -1,82 +1,91 @@
-# local-ref-chat
+# Reference Chat
 
-**local-ref-chat** is a local search and RAG (Retrieval-Augmented Generation) chat assistant for your own documents. It runs entirely on your machine, enabling you to upload files, ask natural-language questions, and get contextual, cited answers from a local language model (Ollama). All indexing and search is in-memory (as of today), with modular Python FastAPI architecture.
+Reference Chat is a local document search and chat assistant. It allows you to upload PDF and TXT files (for now, more formats to be explored soon), search and chat with your documents using a local language model, and manage your document collection. All processing is performed locally; no data is sent to external servers.
 
-## 🚩 Features
+## Features
 
-- **Document upload** (PDF, TXT) from a simple web interface.
-- **Document parsing, splitting (chunking), and semantic embedding** on upload.
-- **Keyword and semantic search** over all your documents—no cloud, all local.
-- **Retrieval-Augmented Q&A**: Ask natural questions and get AI-generated answers grounded in your content, with snippet references.
-- **FastAPI backend** using modular, testable code structure.
-- **Local LLM (Ollama) integration** for safe, private language model inference.
-- **Simple, modern chat UI (work in progress)**: Upload new docs and chat, all in one page.
-- **Full in-memory index** for lightweight operation and maximum privacy. This is to be extended with persistent storage in future versions.
+- Local-only processing and search
+- Upload and manage PDF/TXT documents
+- Ask questions and get answers with references to your documents
+- Keyword and semantic search
+- Download and delete documents
+- REST API for programmatic access
+- Streamlit-based user interface
 
-## 🏗️ Project Structure
+## Quick Start
 
+### Prerequisites
 
-src/
-  main.py              # FastAPI app setup
-  config.py            # App-wide configuration (chunk size, models, etc.)
-  core/
-    __init__.py        # Exposes main classes and helpers (public API)
-    document_manager.py  # Handles file saving, text extraction, chunking
-    indexer.py           # Builds/searches embedding and keyword indexes
-    model.py             # Interface to Ollama LLM
-    utils.py             # Text cleaning, snippet/citation formatting helpers
-    state.py             # Singleton/shared instance management
-  api/
-    __init__.py         # Exposes API routers
-    upload.py           # File upload endpoints
-    search.py           # Search endpoints (keyword, semantic)
-    chat.py             # /ask endpoint and chat UI endpoint
-docs/                  # Your uploaded documents (auto-created)
-requirements.txt
+- Python 3.8 or newer
+- Ollama running locally (https://ollama.ai/)
+- Git
 
+git clone https://github.com/esrmnt/local-ref-chat.git
 
-## 🚀 Getting Started
+### Installation
 
-### 1. Clone and Setup
+Clone the repository and install dependencies:
 
 ```bash
-git clone  local-ref-chat
+git clone https://github.com/esrmnt/local-ref-chat.git
 cd local-ref-chat
 python -m venv venv
-source venv/bin/activate  # or .\venv\Scripts\activate on Windows
+# On Windows:
+.\venv\Scripts\activate
+# On Linux/Mac:
+source venv/bin/activate
 pip install -r requirements.txt
 ```
 
-### 2. Run Ollama
+### Ollama Setup
 
-Make sure [Ollama](https://ollama.com/) is installed and running with your chosen model:
-
-```bash
-ollama run llama3      # Or another local model, per your config.py
-```
-
-### 3. Start the FastAPI App
+Install and start Ollama, then pull a model:
 
 ```bash
-uvicorn src.main:app --reload
+ollama pull llama3
+ollama serve
 ```
 
-App runs at: [http://localhost:8000](http://localhost:8000)
+### Configuration (Optional)
 
-## 🖥️ Usage
+```bash
+cp .env.example .env
+# Edit .env as needed
+```
 
-- **Upload Files:**  
-  Visit [http://localhost:8000/upload](http://localhost:8000/upload) to access the main UI.  
-  Use the upload box to add PDFs or TXT files.
+### Running the Application
 
-- **Keyword/Semantic Search:**  
-  Use `/search/keyword?q=...` and `/search/semantic?q=...` endpoints (or implement a simple Frontend).
+Start the backend:
+```bash
+python -m uvicorn backend.main:app --reload --host 0.0.0.0 --port 8000
+```
 
-- **Chat with your documents:**  
-  Ask questions in the chat window.  
-  The system retrieves relevant snippets and generates an AI answer with sources from your docs.
+Start the frontend (in a new terminal):
+```bash
+streamlit run frontend/app.py
+```
 
-## ✨ Example
+### Access
+
+- Main App: http://localhost:8501
+- API Docs: http://localhost:8000/docs
+- Health Check: http://localhost:8000/health
+
+## Usage
+
+### Document Management
+
+1. Upload PDF or TXT files using the sidebar.
+2. Uploaded files are processed and indexed for search and chat.
+3. Browse uploaded documents, view metadata, download, or delete files.
+
+### Chat and Search
+
+1. Ask questions about your documents in the chat interface.
+2. Answers are generated using a local language model and reference your documents.
+3. Adjust the number of context chunks used for answers in the sidebar.
+
+### ✨ Example
 
 **Upload:**  
 Choose a PDF/TXT, click Upload.
@@ -97,25 +106,92 @@ What are the main points discussed in the 2022 strategy.pdf?
 }
 ```
 
-## ⚙️ Configuration
+## Architecture
 
-App settings are in `src/config.py`:
+The backend is built with FastAPI and handles document processing, search, and chat endpoints. The frontend is built with Streamlit and provides a web interface for uploading, searching, and chatting with documents. Ollama is used for local language model inference. All document data and processing remain local.
 
-- `CHUNK_SIZE_WORDS` — Sentence chunk size for indexing.
-- `EMBEDDING_MODEL_NAME` — SentenceTransformers model used for semantic search.
-- `OLLAMA_API_URL` and `OLLAMA_MODEL` — base URL and model name for Ollama LLM.
-- `DEFAULT_TOP_K` — Number of chunks to retrieve as context for each query.
+### Backend (FastAPI)
+```
+backend/
+├── main.py              # Application setup with lifespan management
+├── settings.py          # Environment-based configuration
+├── models.py            # Pydantic request/response models
+├── logging_config.py    # Structured logging setup
+├── config.py            # Backward compatibility layer
+├── core/
+│   ├── document_manager.py # File handling, validation, text extraction
+│   ├── indexer.py          # Semantic indexing and search
+│   ├── model.py           # Ollama LLM integration
+│   ├── utils.py           # Text processing utilities
+│   └── state.py           # Application state management
+└── api/
+    ├── knowledge.py       # Document upload/management endpoints
+    ├── search.py          # Search endpoints (keyword/semantic)
+    └── chat.py            # RAG chat endpoints
+```
 
-Adjust these to change performance or accuracy.
+### Frontend (Streamlit)
+```
+frontend/
+├── app.py               # Main Streamlit application
+├── components/          # Reusable UI components (future)
+└── pages/               # Multi-page app structure (future)
+```
 
-## 🧩 Code Quality and Structure
+## 🚦 API Endpoints
 
-- **Type hints and docstrings** for maintainability. This needs to be improved upon.
-- **No circular imports**: Utilities are used only from their modules in core; only public classes/functions exposed via package `__init__.py`.
-- **Singleton state**: All routes share the same data/index.
-- **Clean separation** of model calls (`core/model.py`), utilities (`core/utils.py`), and business logic.
+### Knowledge Management
+- `POST /api/v1/upload` - Upload document
+- `GET /api/v1/list` - List documents with metadata
+- `GET /api/v1/documents/{filename}/info` - Get document information
+- `GET /api/v1/documents/{filename}/content` - Get full document content
+- `GET /api/v1/documents/{filename}/preview` - Get document preview
+- `GET /api/v1/documents/{filename}/chunks` - Get document text chunks
+- `GET /api/v1/documents/{filename}/indexed-chunks` - Get indexed chunks with embeddings
+- `GET /api/v1/documents/{filename}/download` - Download original document
+- `DELETE /api/v1/documents/{filename}` - Delete document
+- `POST /api/v1/reindex` - Rebuild search index
 
-## 🛠️ Recommended Next Steps
+### Search
+- `GET /api/v1/search` - Keyword search
+- `GET /api/v1/semantic_search` - Semantic search
+- `GET /api/v1/search/stats` - Search statistics
+
+### Chat
+- `GET /api/v1/ask` - Ask a question (RAG)
+- `POST /api/v1/ask` - Ask a question (POST method)
+- `GET /api/v1/ollama/status` - Check Ollama status
+
+### System
+- `GET /health` - Application health check
+
+More information on each endpoint is available in the API documentation at [API Reference Document](API_REFERENCE_DOCUMENT.md).
+
+## 🐛 Troubleshooting
+
+### Common Issues
+
+**Backend won't start:**
+- Check Python version (3.8+ required)
+- Verify all dependencies installed: `pip install -r requirements.txt`
+- Check port 8000 is available
+
+**Ollama not working:**
+- Ensure Ollama is installed and running: `ollama serve`
+- Check model is available: `ollama list`
+- Verify API URL in configuration
+
+**File upload fails:**
+- Check file size limits (default 50MB)
+- Verify file type is supported (PDF, TXT)
+- Check available disk space
+
+**Empty search results:**
+- Ensure documents are uploaded and indexed
+- Check if questions match document content
+- Try different phrasings or keywords
+
+## 🛠️ Next Steps
 
 - Add clean UI for search and chat (currently basic).
 - Add support for more file types (DOCX, Markdown).
@@ -128,6 +204,7 @@ Adjust these to change performance or accuracy.
 - [FastAPI](https://fastapi.tiangolo.com/) for the API.
 - [SentenceTransformers](https://www.sbert.net/) for semantic embeddings.
 - [Ollama](https://ollama.com/) for local LLM serving.
+- [Streamlit](https://streamlit.io/) for the beautiful frontend framework
 - NLTK for sentence segmentation.
 - PyPDF2 for robust PDF extraction.
 
