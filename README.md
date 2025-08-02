@@ -1,6 +1,6 @@
 # Reference Chat
 
-Reference Chat is a local document search and chat assistant. It allows you to upload PDF and TXT files (for now, more formats to be explored soon), search and chat with your documents using a local language model, and manage your document collection. All processing is performed locally; no data is sent to external servers.
+Reference Chat is a local document search and chat assistant, built as an academic exercise to gain hands-on experience with Retrieval-Augmented Generation (RAG) systems. This project serves as a practical exploration of RAG architectures and their implementation. It allows you to upload PDF and TXT files (for now, more formats to be explored soon), search and chat with your documents using a local language model, and manage your document collection. All processing is performed locally; no data is sent to external servers.
 
 ## Features
 
@@ -110,6 +110,84 @@ What are the main points discussed in the 2022 strategy.pdf?
 
 The backend is built with FastAPI and handles document processing, search, and chat endpoints. The frontend is built with Streamlit and provides a web interface for uploading, searching, and chatting with documents. Ollama is used for local language model inference. All document data and processing remain local.
 
+### System Overview
+
+```mermaid
+graph TB
+    subgraph User
+        UI[Streamlit UI]
+    end
+
+    subgraph Frontend[Frontend Layer]
+        UI --> DocManager[Document Manager]
+        UI --> ChatInterface[Chat Interface]
+        UI --> StatusManager[Status Manager]
+    end
+
+    subgraph Backend[Backend Layer]
+        subgraph API[FastAPI Endpoints]
+            Upload[/upload/]
+            Search[/search/]
+            Chat[/chat/]
+            Health[/health/]
+        end
+
+        subgraph Core[Core Processing]
+            DM[Document Manager]
+            IDX[Semantic Indexer]
+            LLM[LLM Interface]
+            State[State Manager]
+        end
+    end
+
+    subgraph Storage[Local Storage]
+        Files[(Document Files)]
+        Index[(Vector Index)]
+    end
+
+    subgraph External
+        Ollama[Ollama LLM]
+    end
+
+    %% Frontend to Backend Connections
+    DocManager --> Upload
+    ChatInterface --> Chat
+    StatusManager --> Health
+
+    %% Backend Internal Flow
+    Upload --> DM
+    DM --> IDX
+    IDX --> Index
+    DM --> Files
+    
+    Search --> IDX
+    Chat --> IDX
+    Chat --> LLM
+    LLM --> Ollama
+
+    %% State Management
+    State --> |Manages|DM
+    State --> |Manages|IDX
+    State --> |Manages|LLM
+
+    %% Styling
+    classDef frontend fill:#E0BBE4,stroke:#4A4A4A,stroke-width:2px,color:#2A2A2A
+    classDef backend fill:#957DAD,stroke:#4A4A4A,stroke-width:2px,color:#FFFFFF
+    classDef storage fill:#D4E6B5,stroke:#4A4A4A,stroke-width:2px,color:#2A2A2A
+    classDef external fill:#FEC8D8,stroke:#4A4A4A,stroke-width:2px,color:#2A2A2A
+    
+    class UI,DocManager,ChatInterface,StatusManager frontend
+    class Upload,Search,Chat,Health,DM,IDX,LLM,State backend
+    class Files,Index storage
+    class Ollama external
+```
+
+The diagram above shows the high-level architecture of the Reference Chat system. The components are organized into layers:
+- **Frontend Layer**: Handles user interaction and document management interface
+- **Backend Layer**: Contains the API endpoints and core processing logic
+- **Storage Layer**: Manages document files and vector indices
+- **External**: Integrates with Ollama for LLM capabilities
+
 ### Backend (FastAPI)
 ```
 backend/
@@ -165,7 +243,7 @@ frontend/
 ### System
 - `GET /health` - Application health check
 
-More information on each endpoint is available in the API documentation at [API Reference Document](API_REFERENCE_DOCUMENT.md).
+More information on each endpoint is available in the API documentation at [API Reference](ApiReference.md).
 
 ## Troubleshooting
 
