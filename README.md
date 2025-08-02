@@ -1,6 +1,6 @@
 # Reference Chat
 
-Reference Chat is a local document search and chat assistant. It allows you to upload PDF and TXT files (for now, more formats to be explored soon), search and chat with your documents using a local language model, and manage your document collection. All processing is performed locally; no data is sent to external servers.
+Reference Chat is a local document search and chat assistant, built as an academic exercise to gain hands-on experience with Retrieval-Augmented Generation (RAG) systems. This project serves as a practical exploration of RAG architectures and their implementation. It allows you to upload PDF and TXT files (for now, more formats to be explored soon), search and chat with your documents using a local language model, and manage your document collection. All processing is performed locally; no data is sent to external servers.
 
 ## Features
 
