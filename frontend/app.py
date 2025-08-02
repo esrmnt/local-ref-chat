@@ -148,11 +148,12 @@ def delete_document(filename: str) -> Dict[str, Any]:
     except Exception as e:
         return {"success": False, "error": f"Failed to delete document: {str(e)}"}
 
+
 # Streamlit App Configuration
 st.set_page_config(
-    page_title="Reference Chat Assistant", 
-    layout="wide",
-    initial_sidebar_state="expanded"
+    page_title="Reference Chat Assistant",
+    layout="centered",
+    initial_sidebar_state="auto"
 )
 
 # Initialize session state
@@ -176,9 +177,13 @@ if 'last_uploaded_file' not in st.session_state:
 if 'upload_in_progress' not in st.session_state:
     st.session_state.upload_in_progress = False
 
+
 # Header
-st.title("📄🔍 Reference Chat Assistant")
-st.markdown("*AI-powered chat with your documents - completely local and private*")
+st.markdown("""
+<h2 style='color:#222; font-weight:600; margin-bottom:0.2em;'>Reference Chat Assistant</h2>
+<div style='color:#666; font-size:1em; margin-bottom:1.5em;'>AI-powered chat with your documents &ndash; local and private</div>
+""", unsafe_allow_html=True)
+
 
 # Check backend status
 with st.spinner("Checking backend status..."):
@@ -186,164 +191,136 @@ with st.spinner("Checking backend status..."):
     st.session_state.backend_status = status_result
 
 if not status_result["success"]:
-    st.error(f"⚠️ Backend Service Issue: {status_result['error']}")
+    st.warning(f"Backend Service Issue: {status_result['error']}")
     st.info("Please ensure the backend server is running on http://localhost:8000")
     st.stop()
 
-# Display backend status
+# Display backend status (subtle, no vibrant colors)
 status_data = status_result.get("data", {})
-col1, col2, col3 = st.columns(3)
-with col1:
-    st.metric("Status", status_data.get("status", "Unknown"))
-with col2:
-    st.metric("Documents", status_data.get("documents_count", 0))
-with col3:
-    st.metric("Chunks", status_data.get("chunks_count", 0))
+st.markdown("""
+<div style='display:flex; gap:2em; margin-bottom:1em;'>
+  <div><span style='color:#888; font-size:0.95em;'>Status</span><br><span style='font-size:1.2em; color:#222;'>{}</span></div>
+  <div><span style='color:#888; font-size:0.95em;'>Documents</span><br><span style='font-size:1.2em; color:#222;'>{}</span></div>
+  <div><span style='color:#888; font-size:0.95em;'>Chunks</span><br><span style='font-size:1.2em; color:#222;'>{}</span></div>
+</div>
+""".format(
+    status_data.get("status", "Unknown"),
+    status_data.get("documents_count", 0),
+    status_data.get("chunks_count", 0)
+), unsafe_allow_html=True)
 
 # Sidebar: Upload & Documents Management
+
 with st.sidebar:
-    st.header("📁 Document Management")
-    
+    st.markdown("<h4 style='color:#333; margin-bottom:0.5em;'>Document Management</h4>", unsafe_allow_html=True)
+
     # File Upload Section
-    st.subheader("Upload Document")
-    
-    # Show upload status if in progress
+    st.markdown("<div style='color:#666; font-size:1em; margin-bottom:0.5em;'>Upload Document</div>", unsafe_allow_html=True)
+
     if st.session_state.upload_in_progress:
-        st.warning("⏳ Upload in progress... Please wait.")
-    
+        st.info("Upload in progress... Please wait.")
+
     uploaded_file = st.file_uploader(
-        "Choose a PDF or TXT file", 
+        "Choose a PDF or TXT file",
         type=["pdf", "txt"],
         help="Upload documents to ask questions about them",
         disabled=st.session_state.upload_in_progress
     )
-    
+
     if uploaded_file is not None:
-        # Create a unique identifier for the uploaded file
         file_id = f"{uploaded_file.name}_{uploaded_file.size}_{hash(uploaded_file.getvalue())}"
-        
-        # Only process if this is a new file (not the same file from previous run)
-        if (not st.session_state.upload_in_progress and 
-            st.session_state.last_uploaded_file != file_id):
-            
+        if (not st.session_state.upload_in_progress and st.session_state.last_uploaded_file != file_id):
             st.session_state.upload_in_progress = True
             st.session_state.last_uploaded_file = file_id
-            
             with st.spinner("Uploading and processing..."):
                 upload_result = upload_file(uploaded_file)
-            
             st.session_state.upload_in_progress = False
-            
             if upload_result["success"]:
                 upload_data = upload_result["data"]
-                st.success(f"✅ Uploaded: {upload_data['filename']}")
+                st.success(f"Uploaded: {upload_data['filename']}")
                 st.info(f"Created {upload_data.get('chunks_created', 0)} text chunks")
-                # Force refresh of documents cache and UI
                 force_documents_refresh()
                 st.rerun()
             else:
-                st.error(f"❌ Upload failed: {upload_result['error']}")
-                # Reset the file tracking on error so user can retry
+                st.error(f"Upload failed: {upload_result['error']}")
                 st.session_state.last_uploaded_file = None
-    
-    # Debug/reset option (only show if there are issues)
+
     if st.session_state.get('last_uploaded_file') and not st.session_state.upload_in_progress:
-        if st.button("🔄 Reset Upload State", help="Click if upload seems stuck"):
+        if st.button("Reset Upload State", help="Click if upload seems stuck"):
             clear_upload_state()
             st.rerun()
 
-    st.markdown("---")
-    
+    st.markdown("<hr style='margin:1em 0;'>", unsafe_allow_html=True)
+
     # Documents List Section
-    st.subheader("📚 Your Documents")
-    
+    st.markdown("<div style='color:#666; font-size:1em; margin-bottom:0.5em;'>Your Documents</div>", unsafe_allow_html=True)
     docs_result = get_documents_cached()
 
     if docs_result["success"]:
         docs_data = docs_result["data"]
         documents = docs_data.get("documents", [])
-        
         if documents:
-            st.write(f"**Total: {docs_data.get('total_count', len(documents))} documents**")
-            
-            # Document management
+            st.write(f"Total: {docs_data.get('total_count', len(documents))} documents")
             for doc in documents:
-                with st.expander(f"📄 {doc['filename']}", expanded=False):
+                with st.expander(f"{doc['filename']}", expanded=False):
                     col1, col2 = st.columns(2)
-                    
                     with col1:
-                        st.write(f"**Size:** {doc['file_size']:,} bytes")
-                        st.write(f"**Type:** {doc['file_type']}")
-                        st.write(f"**Chunks:** {doc['chunks_count']}")
-                    
+                        st.write(f"Size: {doc['file_size']:,} bytes")
+                        st.write(f"Type: {doc['file_type']}")
+                        st.write(f"Chunks: {doc['chunks_count']}")
                     with col2:
                         if doc.get('upload_date'):
-                            upload_date = doc['upload_date'][:19]  # Remove timezone info for display
-                            st.write(f"**Uploaded:** {upload_date}")
+                            upload_date = doc['upload_date'][:19]
+                            st.write(f"Uploaded: {upload_date}")
                         if doc.get('character_count'):
-                            st.write(f"**Characters:** {doc['character_count']:,}")
-                    
-                    # Action buttons - Download and Delete only (removed preview)
+                            st.write(f"Characters: {doc['character_count']:,}")
                     col1, col2 = st.columns(2)
-                    
                     with col1:
                         download_url = download_document(doc['filename'])
-                        st.markdown(f"[⬇️ Download]({download_url})")
-                    
+                        st.markdown(f"[Download]({download_url})")
                     with col2:
-                        download_url = download_document(doc['filename'])
-                        st.markdown(f"[� Download]({download_url})")
-                    
-                    with col2:
-                        # Improved delete functionality with proper confirmation
                         delete_key = f"delete_{doc['filename']}"
-                        confirm_key = f"confirm_delete_state_{doc['filename']}"  # Changed to avoid widget key conflict
-                        
+                        confirm_key = f"confirm_delete_state_{doc['filename']}"
                         if st.session_state.get(confirm_key, False):
-                            # Confirmation state - show final delete button
                             col2a, col2b = st.columns(2)
                             with col2a:
-                                if st.button(f"✅ Confirm", key=f"confirm_btn_{doc['filename']}", type="primary"):
+                                if st.button(f"Confirm", key=f"confirm_btn_{doc['filename']}", type="primary"):
                                     with st.spinner(f"Deleting {doc['filename']}..."):
                                         delete_result = delete_document(doc['filename'])
                                     if delete_result["success"]:
-                                        st.success(f"✅ Deleted {doc['filename']}")
-                                        # Clear confirmation state and force refresh
+                                        st.success(f"Deleted {doc['filename']}")
                                         del st.session_state[confirm_key]
                                         force_documents_refresh()
                                         st.rerun()
                                     else:
-                                        st.error(f"❌ Delete failed: {delete_result['error']}")
+                                        st.error(f"Delete failed: {delete_result['error']}")
                                         del st.session_state[confirm_key]
-                            
                             with col2b:
-                                # Cancel button
-                                if st.button(f"❌ Cancel", key=f"cancel_btn_{doc['filename']}", type="secondary"):
+                                if st.button(f"Cancel", key=f"cancel_btn_{doc['filename']}", type="secondary"):
                                     del st.session_state[confirm_key]
                                     st.rerun()
                         else:
-                            # Initial delete button
-                            if st.button(f"🗑️ Delete", key=delete_key, type="secondary"):
+                            if st.button(f"Delete", key=delete_key, type="secondary"):
                                 st.session_state[confirm_key] = True
                                 st.rerun()
         else:
             st.info("No documents uploaded yet.")
     else:
         st.error(f"Failed to load documents: {docs_result['error']}")
-    
-    # Settings
-    st.markdown("---")
-    st.subheader("⚙️ Search Settings")
+
+    st.markdown("<hr style='margin:1em 0;'>", unsafe_allow_html=True)
+    st.markdown("<div style='color:#666; font-size:1em; margin-bottom:0.5em;'>Search Settings</div>", unsafe_allow_html=True)
     top_k = st.slider(
-        "Context chunks", 
-        min_value=1, 
-        max_value=10, 
+        "Context chunks",
+        min_value=1,
+        max_value=10,
         value=5,
         help="Number of relevant document chunks to use for answering"
     )
 
+
 # Main Chat Interface
-st.header("💬 Chat with Your Documents")
+st.markdown("<h4 style='color:#333; margin-bottom:0.5em;'>Chat with Your Documents</h4>", unsafe_allow_html=True)
 
 # Display chat history
 if st.session_state.chat_history:
@@ -354,14 +331,11 @@ if st.session_state.chat_history:
         else:
             with st.chat_message("assistant"):
                 st.write(chat["content"])
-                
-                # Show references if available
                 if chat.get("references"):
-                    with st.expander(f"📚 Sources ({len(chat['references'])} documents)", expanded=False):
+                    with st.expander(f"Sources ({len(chat['references'])} documents)", expanded=False):
                         for ref in chat["references"]:
                             similarity = ref.get('similarity')
                             similarity_text = f" (similarity: {similarity:.3f})" if similarity else ""
-                            
                             st.markdown(f"""
                             **{ref['filename']}**{similarity_text}
                             
@@ -372,9 +346,8 @@ if st.session_state.chat_history:
                             ---
                             """)
 
-# Chat input
 if not st.session_state.chat_history:
-    st.info("👋 Welcome! Upload some documents and ask me questions about them.")
+    st.info("Welcome! Upload some documents and ask questions about them.")
 
 user_question = st.chat_input(
     "Ask a question about your documents...",
@@ -382,39 +355,26 @@ user_question = st.chat_input(
 )
 
 if user_question and user_question.strip():
-    # Add user message to chat history
     st.session_state.chat_history.append({
-        "role": "user", 
+        "role": "user",
         "content": user_question
     })
-    
-    # Display user message immediately
     with st.chat_message("user"):
         st.write(user_question)
-    
-    # Show thinking message
     with st.chat_message("assistant"):
         thinking_placeholder = st.empty()
-        thinking_placeholder.write("🤔 Thinking...")
-        
-        # Get answer from backend
+        thinking_placeholder.write("Thinking...")
         answer_result = ask_question(user_question, top_k)
-        
         if answer_result["success"]:
             answer_data = answer_result["data"]
             answer = answer_data.get("answer", "No answer received.")
             context = answer_data.get("context", [])
-            
-            # Replace thinking message with actual answer
             thinking_placeholder.write(answer)
-            
-            # Show sources
             if context:
-                with st.expander(f"📚 Sources ({len(context)} documents)", expanded=False):
+                with st.expander(f"Sources ({len(context)} documents)", expanded=False):
                     for ref in context:
                         similarity = ref.get('similarity')
                         similarity_text = f" (similarity: {similarity:.3f})" if similarity else ""
-                        
                         st.markdown(f"""
                         **{ref['filename']}**{similarity_text}
                         
@@ -424,19 +384,14 @@ if user_question and user_question.strip():
                         
                         ---
                         """)
-            
-            # Add assistant response to chat history
             st.session_state.chat_history.append({
                 "role": "assistant",
                 "content": answer,
                 "references": context
             })
-            
         else:
-            error_msg = f"❌ Error: {answer_result['error']}"
+            error_msg = f"Error: {answer_result['error']}"
             thinking_placeholder.write(error_msg)
-            
-            # Add error to chat history
             st.session_state.chat_history.append({
                 "role": "assistant",
                 "content": error_msg,
@@ -444,9 +399,9 @@ if user_question and user_question.strip():
             })
 
 # Footer
-st.markdown("---")
+st.markdown("<hr style='margin:2em 0 1em 0;'>", unsafe_allow_html=True)
 st.markdown("""
-<div style='text-align: center; color: #666; font-size: 0.8em;'>
-    Reference Chat - Your documents, your AI, your privacy 🔒
+<div style='text-align: center; color: #888; font-size: 0.85em;'>
+    Reference Chat &ndash; Your documents, your AI, your privacy
 </div>
 """, unsafe_allow_html=True)
